@@ -19,6 +19,6 @@ public class Ex2Utils {
     public static  final String[] ABC= {"A","B","C","D","E","F","G","H","I","J","K","L","O","M","N","P","Q","R","S","T","U","V","W","X","Y","Z"};
 
     // ****** not implemented in Ex2!! ******
-    // public static final String[] FUNCTIONS = {"if", "sin", "cos", "pow", "min", "max"};
-    // public static String[] B_OPS = {"<", ">", "==","!=", "<=", ">="};
+    public static final String[] FUNCTIONS = {"if", "sin", "cos", "pow", "min", "max"};
+    public static String[] B_OPS = {"<", ">", "==","!=", "<=", ">="};
 }

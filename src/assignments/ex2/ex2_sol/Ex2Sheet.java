@@ -128,6 +128,12 @@ public class Ex2Sheet implements Sheet {
             return;
         }
 
+        // --- ניקוי הערכים המחושבים הקודמים עבור תא זה ---
+        // הנח שהמערכים data ו-textValues מאותחלים בגודל של הטבלה.
+        data[x][y] = null;
+        textValues[x][y] = null;
+
+        // יצירת תא חדש עם הנתון שהוזן
         Cell c = new SCell(s);
         if (c == null) {
             System.out.println("❌ ERROR: Created cell is NULL!");
@@ -136,10 +142,10 @@ public class Ex2Sheet implements Sheet {
 
         System.out.println("🔍 DEBUG: Created cell, type before check: " + c.getType());
 
-        // ניתוח של הקלט: אם המחרוזת מתחילה ב־"=" אז נבדוק אם מדובר ב־IF או בפונקציה אחרת
+        // ניתוח הקלט: אם המחרוזת מתחילה ב־"=" אז בודקים האם מדובר ב־IF או בפונקציה אחרת
         if (s.startsWith("=")) {
             if (s.startsWith("=if(")) {
-                // מסירים את סימן השוויון
+                // מסירים את סימן השוויון, כך מתקבלת המחרוזת ללא "="
                 String ifFormula = s.substring(1);
                 if (isValidIf(ifFormula)) {
                     c.setType(Ex2Utils.IF);
@@ -160,6 +166,7 @@ public class Ex2Sheet implements Sheet {
         table[x][y] = c;
         System.out.println("🔍 DEBUG: Cell type after set: " + c.getType());
     }
+
 
 
 
@@ -528,7 +535,13 @@ public class Ex2Sheet implements Sheet {
     private Object computeFormP(String form) {
         System.out.println("🔍 DEBUG: computeFormP called with: " + form);
 
-        // שלב 1: בדיקה אם המחרוזת היא מספר
+        // ★ תיקון: הסרת סימן "=" מוביל אם קיים
+        if(form.startsWith("=")) {
+            form = form.substring(1).trim();
+            System.out.println("🔍 DEBUG: Removed leading '=', new form: " + form);
+        }
+
+        // שלב 1: בדיקה אם מדובר במספר
         if (isNumber(form)) {
             Double num = getDouble(form);
             System.out.println("✅ DEBUG: Parsed number: " + num);
@@ -549,34 +562,28 @@ public class Ex2Sheet implements Sheet {
             return result;
         }
 
-        // שלב 4: טיפול בהפניות לתאים – החלפת כל הפניה (כגון "B2") בערכה המחושב (כמספר)
-        // שלב 4: טיפול בהפניות לתאים – החלפת כל הפניה (כגון "B2" או "b1") בערכה המחושב (כמספר)
-        // שלב 4: טיפול בהפניות לתאים – החלפת כל הפניה (כגון "B2" או "b1") בערכה המחושב (כמספר)
+        // שלב 4: טיפול בהפניות לתאים – החלפת כל הפניה (כגון "A1" או "b2") בערכה המחושב (כמספר)
         java.util.regex.Pattern refPattern = java.util.regex.Pattern.compile("([A-Za-z][0-9]+)");
         java.util.regex.Matcher matcher = refPattern.matcher(form);
         while (matcher.find()) {
-            String cellRefOrig = matcher.group(1); // לדוגמה "b1" או "B1"
-            String cellRef = cellRefOrig.toUpperCase(); // נהפוך תמיד לאותיות גדולות
+            String cellRefOrig = matcher.group(1); // לדוגמה "b1" או "A1"
+            String cellRef = cellRefOrig.toUpperCase();
             Index2D idx = new CellEntry(cellRef);
             if (!isIn(idx.getX(), idx.getY())) {
                 System.out.println("❌ DEBUG: Cell reference " + cellRef + " out of range.");
                 return null;
             }
-            // קבלת הערך המחושב של התא (בהנחה שהוא מספרי)
             String refVal = this.value(idx.getX(), idx.getY());
             Double refNum = getDouble(refVal);
             if (refNum == null) {
                 System.out.println("❌ DEBUG: Cell reference " + cellRef + " does not contain a valid number.");
                 return null;
             }
-            // החלפה באופן בלתי תלוי במקרה:
-            // (?i) מציין שהחלפת הביטוי תתבצע באופן לא תלוי במקרה.
+            // החלפה בלתי תלויה במקרה – משתמשים ב־replaceAll עם (?i)
             form = form.replaceAll("(?i)" + java.util.regex.Pattern.quote(cellRefOrig), refNum.toString());
         }
 
-
-
-        // ★ חדש: בדיקה מחדש – אם לאחר החלפת ההפניות המחרוזת היא מספר
+        // ★ בדיקה מחדש: אם לאחר החלפת ההפניות המחרוזת היא מספר
         if (isNumber(form)) {
             Double num = getDouble(form);
             System.out.println("✅ DEBUG: After cell replacement, parsed number: " + num);
@@ -588,9 +595,21 @@ public class Ex2Sheet implements Sheet {
             form = removeB(form);
         }
 
-        // שלב 6: ניתוח ביטוי אריתמטי – מציאת האופרטור העיקרי
+        // שלב 6: ניתוח ביטוי אריתמטי – חיפוש האופרטור העיקרי
         int opIndex = findLastOp(form);
         if (opIndex == -1) {
+            // אם לא נמצא אופרטור ונראה שאין תווי אופרטור, נניח שמדובר בטקסט פשוט
+            boolean hasOperator = false;
+            for (String op : Ex2Utils.M_OPS) {
+                if (form.contains(op)) {
+                    hasOperator = true;
+                    break;
+                }
+            }
+            if (!hasOperator) {
+                System.out.println("✅ DEBUG: Returning literal text: " + form);
+                return form;  // אין אופרטור → טקסט פשוט
+            }
             System.out.println("❌ DEBUG: No valid operator found in arithmetic expression: " + form);
             return null;
         }
@@ -626,6 +645,7 @@ public class Ex2Sheet implements Sheet {
         System.out.println("✅ DEBUG: Arithmetic expression " + form + " evaluated to: " + result);
         return result;
     }
+
 
 
 
@@ -673,6 +693,14 @@ public class Ex2Sheet implements Sheet {
         String condition = parts[0];
         String ifTrue = parts[1];
         String ifFalse = parts[2];
+
+        // *** בדיקה נוספת ***
+        // אם אחד מהארגומנטים הוא הפניה לתא בצורה גסה (למשל "A1" או "b2"), זה נחשב לבלתי תקין.
+        if (ifTrue.matches("^[A-Za-z]+[0-9]+$") || ifFalse.matches("^[A-Za-z]+[0-9]+$")) {
+            System.out.println("❌ DEBUG: IF function argument is a bare cell reference, which is invalid.");
+            return null;
+        }
+
         Boolean condResult = evaluateCondition(condition);
         if (condResult == null) {
             System.out.println("❌ DEBUG: IF condition is invalid.");
@@ -683,6 +711,7 @@ public class Ex2Sheet implements Sheet {
         System.out.println("✅ DEBUG: IF function chosen result: " + chosenResult);
         return chosenResult;
     }
+
 
 
 

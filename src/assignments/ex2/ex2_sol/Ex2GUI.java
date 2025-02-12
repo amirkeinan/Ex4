@@ -18,9 +18,14 @@ public class Ex2GUI {
 
 	private static Sheet table; // this is the main data (an implementation of the Sheet interface).
 	private static Index2D cord = null; // a table entry used by the GUI of setting up a cell value / form
-	public Ex2GUI() {;}  // an empty (redundant) constructor.
 
-	/** The main function for running Ex2 */
+	public Ex2GUI() {
+		;
+	}  // an empty (redundant) constructor.
+
+	/**
+	 * The main function for running Ex2
+	 */
 	public static void main(String[] a) {
 		table = new Ex2Sheet(Ex2Utils.WIDTH, Ex2Utils.HEIGHT);
 		testSimpleGUI(table);
@@ -28,6 +33,7 @@ public class Ex2GUI {
 
 	/**
 	 * This function runs the main (endlees) loop of the GUI
+	 *
 	 * @param table the SpreadSheet - note: this class is written as a naive implementation of "singleton" (i.e., all static).
 	 */
 	public static void testSimpleGUI(Sheet table) {
@@ -45,32 +51,42 @@ public class Ex2GUI {
 			StdDrawEx2.show(); // presents the window.
 			int xx = StdDrawEx2.getXX(); // gets the x coordinate of the mouse click (-1 if none)
 			int yy = StdDrawEx2.getYY(); // gets the y coordinate of the mouse click (-1 if none)
-			inputCell(xx,yy); 			 // if isIn(xx,yy) an input window will be opened to allow the user to edit cell (xx,yy);
+
+			inputCell(xx, yy);             // if isIn(xx,yy) an input window will be opened to allow the user to edit cell (xx,yy);
 			StdDrawEx2.pause(Ex2Utils.WAIT_TIME_MS); // waits a few milliseconds - say 30 fps is sufficient.
 		}
 	}
-	public static void save(String fileName){
+
+	public static void save(String fileName) {
 		try {
 			table.save(fileName);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	public static void load(String fileName){
+
+	public static void load(String fileName) {
 		try {
 			table.load(fileName);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+
 	private static Color getColorFromType(int t) {
 		Color ans = Color.GRAY;
-		if(t== Ex2Utils.NUMBER) {ans=Color.BLACK;}
-		if(t== Ex2Utils.FORM) {ans=Color.BLUE;}
-		if(t== Ex2Utils.ERR_FORM_FORMAT) {ans=Color.RED;}
-		if(t== Ex2Utils.ERR_CYCLE_FORM) {ans= StdDrawEx2.BOOK_RED;}
+		if (t == Ex2Utils.NUMBER) {
+			ans = Color.BLACK;
+		}
+		if (t == Ex2Utils.FORM) {
+			ans = Color.BLUE;
+		}
+		if (t == Ex2Utils.ERR_FORM_FORMAT) {
+			ans = Color.RED;
+		}
+		if (t == Ex2Utils.ERR_CYCLE_FORM) {
+			ans = StdDrawEx2.BOOK_RED;
+		}
 		return ans;
 	}
 
@@ -92,6 +108,7 @@ public class Ex2GUI {
 			StdDrawEx2.text(xc, max_y + y_height, "" + Ex2Utils.ABC[y]);
 		}
 	}
+
 	/**
 	 * Draws the content of each cell (none empty).
 	 */
@@ -101,49 +118,59 @@ public class Ex2GUI {
 		int maxx = table.width();
 		double x_space = Ex2Utils.GUI_X_SPACE, x_start = Ex2Utils.GUI_X_START;
 		double y_height = Ex2Utils.GUI_Y_TEXT_START;
+
 		for (int x = 0; x < maxx; x = x + 1) {
 			double xc = x_start + x * x_space;
 			for (int y = 0; y < max_y; y = y + 1) {
-				String w = table.value(x, y);//""+abc[x]+y;
-				Cell cc = table.get(x, y);
-				int t = cc.getType();
-				StdDrawEx2.setPenColor(getColorFromType(t));
+				String w = table.value(x, y);
+
+
+				if (x == 1 && y == 1) {
+				}
 				int max = Math.min(Ex2Utils.MAX_CHARS, w.length());
 				w = w.substring(0, max);
 				double yc = max_y - (y + 1 - y_height);
 				StdDrawEx2.text(xc, yc, w);
+
 			}
 		}
 	}
 
-	/** input a content into cell(xx,yy) if it is within this SpreadSheet.
+
+	/**
+	 * input a content into cell(xx,yy) if it is within this SpreadSheet.
 	 *
 	 * @param xx the x coordinate of the required cell.
 	 * @param yy the y coordinate of the required cell.
 	 */
-	private static void inputCell(int xx,int yy) {
-		if(table.isIn(xx,yy)) {
-			cord = new CellEntry(xx,yy);
-			Cell cc = table.get(xx,yy);
-			String ww = cord+": "+cc.toString()+" : ";
-			StdDrawEx2.text(Ex2Utils.GUI_X_START, Ex2Utils.MAX_X-1, ww);
-			StdDrawEx2.show();
-			if(Ex2Utils.Debug) {System.out.println(ww);}
-			String c = StdDrawEx2.getCell(cord,cc.getData()); // bug3452
-			String s1 = table.get(xx,yy).getData();
-			if(c==null) {
-				table.set(xx,yy,s1);
-			}
-			else {
-				table.set(xx, yy, c);
-				int[][] calc_d = table.depth();
-				if (calc_d[xx][yy] == Ex2Utils.ERR) {
-					table.set(xx, yy, c);
-					table.get(xx,yy).setType(Ex2Utils.ERR_CYCLE_FORM);
+	public static void inputCell(int xx, int yy) {
+		if (table.isIn(xx, yy)) {
+			if (table.isIn(xx, yy)) {
+				System.out.println("✅ DEBUG: inputCell() activated for (" + xx + "," + yy + ")");
+
+				cord = new CellEntry(xx, yy);
+				Cell cc = table.get(xx, yy);
+				System.out.println("🔍 DEBUG: Current cell content = " + cc.getData());
+
+				String c = StdDrawEx2.getCell(cord, cc.getData());
+
+				if (c == null) {
+					System.out.println("❌ DEBUG: New input is NULL, skipping set()");
+					return;
 				}
+
+				System.out.println("🔍 DEBUG: New input detected: " + c);
+				table.set(xx, yy, c);
+
+				System.out.println("🔍 DEBUG: Calling eval after set...");
+				table.eval();
+				System.out.println("✅ DEBUG: eval finished execution.");
+				System.out.println("✅ TEST VALUE(1,2): " + table.value(1, 2));
+				StdDrawEx2.resetXY();
 			}
-			table.eval();
-			StdDrawEx2.resetXY();
+			//System.out.println("🔍 DEBUG: Final GUI value at (" + xx + "," + yy + ") = " + table.value(xx, yy));
+
 		}
+
 	}
 }

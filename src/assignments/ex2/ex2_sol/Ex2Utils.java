@@ -8,6 +8,8 @@ package assignments.ex2.ex2_sol;
  */
 public class Ex2Utils {
     public static final int TEXT=1, NUMBER=2, FORM=3, ERR_FORM_FORMAT=-2, ERR_CYCLE_FORM=-1, ERR=-1;
+    public static final int FUNCTION = 4;
+
     public static final String ERR_CYCLE = "ERR_CYCLE!", ERR_FORM = "ERR_FORM!";
     public static final int WIDTH = 9, HEIGHT=17, MAX_CHARS=8, WINDOW_WIDTH=1200, WINDOW_HEIGHT=600;
     public static final int WAIT_TIME_MS = 10, MAX_X=20;
@@ -16,6 +18,7 @@ public class Ex2Utils {
     public static boolean Debug = false;
     public static final String[] M_OPS = {"+", "-", "*", "/"};
     public static  final String[] ABC= {"A","B","C","D","E","F","G","H","I","J","K","L","O","M","N","P","Q","R","S","T","U","V","W","X","Y","Z"};
+    public static final int IF = 4, IF_ERR = -3, FUNC_ERR = -4;
 
     // ****** not implemented in Ex2!! ******
     public static final String[] FUNCTIONS = {"if", "sin", "cos", "pow", "min", "max"};

@@ -146,29 +146,21 @@ public class Ex2GUI {
 	public static void inputCell(int xx, int yy) {
 		if (table.isIn(xx, yy)) {
 			if (table.isIn(xx, yy)) {
-				System.out.println("✅ DEBUG: inputCell() activated for (" + xx + "," + yy + ")");
 
 				cord = new CellEntry(xx, yy);
 				Cell cc = table.get(xx, yy);
-				System.out.println("🔍 DEBUG: Current cell content = " + cc.getData());
 
 				String c = StdDrawEx2.getCell(cord, cc.getData());
 
 				if (c == null) {
-					System.out.println("❌ DEBUG: New input is NULL, skipping set()");
 					return;
 				}
 
-				System.out.println("🔍 DEBUG: New input detected: " + c);
 				table.set(xx, yy, c);
 
-				System.out.println("🔍 DEBUG: Calling eval after set...");
 				table.eval();
-				System.out.println("✅ DEBUG: eval finished execution.");
-				System.out.println("✅ TEST VALUE(1,2): " + table.value(1, 2));
 				StdDrawEx2.resetXY();
 			}
-			//System.out.println("🔍 DEBUG: Final GUI value at (" + xx + "," + yy + ") = " + table.value(xx, yy));
 
 		}
 

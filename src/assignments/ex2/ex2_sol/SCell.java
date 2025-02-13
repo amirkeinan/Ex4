@@ -21,22 +21,29 @@ public class SCell implements Cell {
     }
 
     @Override
-public void setData(String s) {
-    if(s!=null) {
-        type = Ex2Utils.TEXT;
-        if (isNumber(s)) {
-            type = Ex2Utils.NUMBER;
+    public void setData(String s) {
+        if(s!=null) {
+            type = Ex2Utils.TEXT;
+            if (isNumber(s)) {
+                type = Ex2Utils.NUMBER;
+            }
+            if(s.startsWith("=")) {
+                type = Ex2Utils.FORM;
+            }
+            _line = s;
         }
-        if(s.startsWith("=")) {
-            type = Ex2Utils.FORM;
-        }
-        _line = s;
     }
-}
     @Override
     public String getData() {
+        if (type == Ex2Utils.IF_ERR ||
+                type == Ex2Utils.ERR_FORM_FORMAT ||
+                type == Ex2Utils.ERR_CYCLE_FORM ||
+                type == Ex2Utils.FUNC_ERR) {
+            return Ex2Utils.ERR_FORM;
+        }
         return _line;
     }
+
 
     @Override
     public int getType() {

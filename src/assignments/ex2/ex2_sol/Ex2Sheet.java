@@ -4,52 +4,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
-/**
- * מחלקת Ex2Sheet – מימוש גיליון אלקטרוני.
- *
- * פונקציות עיקריות:
- * - ניהול תאי הגיליון (set, get, value)
- * - הערכת נוסחאות (eval, computeForm, computeFormP)
- * - טיפול בנוסחאות פורמולות (FORM), פונקציות, ונוסחאות IF
- *
- * פונקציות ייעודיות להערכת נוסחאות IF:
- * - isValidIf(String form, int cellX, int cellY): בודקת את תקינות נוסחת IF בהתאם לפורמט
- *   * מחלקת את הנוסחה לשלושה חלקים: תנאי, ifTrue, ifFalse
- *   * בודקת שהתנאי ניתן להערכה (באמצעות evaluateCondition)
- *   * בודקת את תקינות הארגומנטים באמצעות isValidExpressionForArgument (לא מאפשרת הפניה גסה לתא)
- *   * בודקת הפניה עצמית – אם אחד מחלקי הנוסחה מכיל את הפניה לתא שבו היא נמצאת, מחזירה false.
- *
- * - isValidCondition(String condition): בודקת שהתנאי מכיל אופרטור אחד מתוך {<, >, ==, !=, <=, >=}
- *   * משתמשת ב-isValidExpressionForCondition, שמאפשרת הפניות לתאים (כמו "a1") כתקינות בתנאי.
- *
- * - isValidExpressionForArgument(String expr): בודקת את הביטויים המופיעים בארגומנטים ifTrue/ifFalse.
- *   * מאפשרת נוסחה (מתחילה ב "=" או "if("), מספרים, טקסט מוקף גרשיים.
- *   * אינה מאפשרת הפניה גסה (כמו "A1").
- *
- * - containsSelfReference(String formula, int x, int y): בודקת אם נוסחה כוללת הפניה עצמית לתא (למשל, "A0" בתוך נוסחה בתא A0).
- *
- * - evaluateIfFunction(String form): מחשבת נוסחת IF.
- *   * מפרידה את הנוסחה לשלושה חלקים (באמצעות splitIfArguments)
- *   * מחשבת את התנאי באמצעות evaluateCondition
- *   * בוחרת את הערך בהתאם לתנאי (מפעילה computeFormP על ifTrue או ifFalse)
- *
- * - evaluateCondition(String condition): מחשבת את ערך התנאי על ידי חלוקה לפי אופרטורים, החלפת הפניות לתאים, והמרה למספרים.
- *
- * - resolveCellReferences(String expr): מחליפה הפניות לתאים בערכים המחושבים (באמצעות value()) בתוך הביטוי.
- *
- * - computeFormP(String form): פונקציה רקורסיבית המחשבת נוסחה (מספר, טקסט, IF, ביטויים אריתמטיים).
- *   * מטפלת בהסרת סימן "=" מוביל, במספרים, בטקסט, בנוסחאות IF (באמצעות evaluateIfFunction),
- *     ובהחלפת הפניות לתאים.
- *
- * שאר הפונקציות עוסקות בטיפול בביטויים אריתמטיים (findLastOp, removeB, canRemoveB, op, isNumber) ובניהול תלות.
- *
- * הערות: הפונקציות isValidExpressionForCondition, isValidExpressionForArgument, evaluateCondition, containsSelfReference
- * נועדו להבטיח שנוסחאות IF מתבצעות כראוי – בכך שמאפשרות הפניות לתאים בתנאי, אך מונעות הפניה גסה בארגומנטים,
- * וכן מזהות הפניה עצמית (self-reference) עבור תא מסוים.
- *
- */
 public class Ex2Sheet implements Sheet {
     private Cell[][] table;
     private Double[][] data;
@@ -63,7 +21,7 @@ public class Ex2Sheet implements Sheet {
             }
         }
         data = new Double[x][y];
-        textValues = new String[x][y]; // אתחול מערך התוצאות הטקסטואליות
+        textValues = new String[x][y]; // Initializing the textual result set
         eval();
     }
 
@@ -116,7 +74,7 @@ public class Ex2Sheet implements Sheet {
             return;
         }
 
-        // ניקוי ערכי החישוב הקודמים עבור תא זה
+        // Clear previous calculation value for this cell
         data[x][y] = null;
         textValues[x][y] = null;
 
@@ -126,12 +84,12 @@ public class Ex2Sheet implements Sheet {
         }
 
 
-        // ניתוח הקלט: אם המחרוזת מתחילה ב"=", בודקים אם מדובר ב-IF או פונקציה אחרת
+        // Input analysis: If the string starts with "=", check if it is an IF or another function
         if (s.startsWith("=")) {
             if (s.startsWith("=if(")) {
-                // מסירים את סימן השוויון כך שמתקבלת המחרוזת ללא "="
+                //Remove the equal sign so that the string is obtained without the "="
                 String ifFormula = s.substring(1);
-                // קריאה לגרסת isValidIf עם קואורדינטות האמת של התא
+
                 if (isValidIf(ifFormula, x, y)) {
                     c.setType(Ex2Utils.IF);
                 } else {
@@ -167,7 +125,7 @@ public class Ex2Sheet implements Sheet {
                 if (dd[x][y] != -1) {
                     String res = eval(x, y);
 
-                    // אם התא אמור להכיל מספר – ננסה להמיר
+                    // If the cell is supposed to contain a number – we will try to convert
                     if (c.getType() == Ex2Utils.NUMBER || c.getType() == Ex2Utils.FORM || c.getType() == Ex2Utils.FUNCTION) {
                         try {
                             Double d = Double.parseDouble(res);
@@ -176,7 +134,7 @@ public class Ex2Sheet implements Sheet {
                             c.setType(Ex2Utils.ERR_FORM_FORMAT);
                         }
                     }
-                    // אם התא הוא טקסט – אין המרה
+                    // If the cell is text – no conversion
                 }
                 if (dd[x][y] == -1) {
                     c.setType(Ex2Utils.ERR_CYCLE_FORM);
@@ -247,7 +205,10 @@ public class Ex2Sheet implements Sheet {
             try {
                 int x = Ex2Sheet.getInteger(s1[0]);
                 int y = Ex2Sheet.getInteger(s1[1]);
-                sp.set(x,y,s1[2]);
+                //Solution to splitting a condition by "," instead of for loop:
+                // combining the remaining array cells (except X,Y) into a single expression
+                String res = Arrays.stream(s1,2,s1.length).collect(Collectors.joining(","));
+                sp.set(x,y,res);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -279,12 +240,18 @@ public class Ex2Sheet implements Sheet {
 
     private int canBeComputed(ArrayList<Index2D> deps, int[][] tmpTable) {
         int ans = 0;
-        for(int i=0;i<deps.size()&ans!=-1;i=i+1) {
-            Index2D c = deps.get(i);
-            int v = tmpTable[c.getX()][c.getY()];
-            if(v==-1) {ans=-1;} // not yet computed;
-            else {ans = Math.max(ans,v+1);}
+        //try catch to keep from index exceptions
+        try {
+            for(int i=0;i<deps.size()&ans!=-1;i=i+1) {
+                Index2D c = deps.get(i);
+                int v = tmpTable[c.getX()][c.getY()];
+                if(v==-1) {ans=-1;} // not yet computed;
+                else {ans = Math.max(ans,v+1);}
+            }
+        } catch (Exception e) {
+            return Ex2Utils.ERR_FORM_FORMAT;
         }
+
         return ans;
     }
     @Override
@@ -295,12 +262,15 @@ public class Ex2Sheet implements Sheet {
         }
         int type = c.getType();
 
-        // אם זה טקסט – מחזירים ישירות את תוכן התא המקורי
+        // If it is text – directly return the original cell contents
         if (type == Ex2Utils.TEXT) {
             return c.getData();
         }
 
-        // אם זה מספר – נבדוק האם יש ערך מחושב במערך data, ואם לא, נחזיר את הערך המקורי
+        /*
+        If it is a number – we will check if there is a calculated value in the data array,
+         and if not, we will return the original value.
+         */
         if (type == Ex2Utils.NUMBER) {
             if (data != null && data[x][y] != null) {
                 return String.valueOf(data[x][y]);
@@ -309,12 +279,12 @@ public class Ex2Sheet implements Sheet {
             }
         }
 
-        // *** אם סוג התא הוא IF_ERR – נחזיר ERR_FORM מיד ***
+        // If the cell type is IF_ERR – we will return ERR_IF immediately
         if (type == Ex2Utils.IF_ERR) {
-            return Ex2Utils.ERR_FORM;
+            return Ex2Utils.ERR_If;
         }
 
-        // עבור נוסחאות תקינות (FORM, FUNCTION, IF)
+        // for valid formulas (FORM, FUNCTION, IF)
         if (type == Ex2Utils.FORM || type == Ex2Utils.FUNCTION || type == Ex2Utils.IF) {
             Object result = computeForm(x, y);
             if (result == null) {
@@ -349,7 +319,7 @@ public class Ex2Sheet implements Sheet {
     /////////////////////////////////////////////////
     public boolean isFunction(String s) {
         if (s.startsWith("=")) {
-            s = s.substring(1); // מסירים את סימן השוויון
+            s = s.substring(1); // cut "="
         }
 
         boolean result = false;
@@ -430,13 +400,12 @@ public class Ex2Sheet implements Sheet {
     }
     private Object computeForm(int x, int y) {
         String form = table[x][y].getData();
-        // שמירת הפורמולה המקורית לא משתנה – לא מעדכנים אותה
-        String procForm = form.substring(1); // מסירים "="
+        String procForm = form.substring(1); // cut the "="
         procForm = removeSpaces(procForm);
 
         Object result = computeFormP(procForm);
         if (result == null) {
-            // שמירת הודעת שגיאה במערך התוצאות הטקסטואליות
+            //Saving an error message in the textual result set
             textValues[x][y] = Ex2Utils.ERR_FORM;
             return Ex2Utils.ERR_FORM;
         }
@@ -462,7 +431,7 @@ public class Ex2Sheet implements Sheet {
     private boolean isFormP(String form) {
         boolean ans = false;
         while(canRemoveB(form)) {
-            form = removeB(form);
+            form = removeB(form);//remove "()"
         }
         Index2D c = new CellEntry(form);
         if(isIn(c.getX(), c.getY())) {ans = true;}
@@ -488,9 +457,7 @@ public class Ex2Sheet implements Sheet {
     public static ArrayList<Index2D> allCells(String line) {
         ArrayList<Index2D> ans = new ArrayList<Index2D>();
         if (line == null) return ans;
-        // נוודא שהחיפוש נעשה באותיות גדולות
         line = line.toUpperCase();
-        // ביטוי רגולרי לתא: אות אחת מ-A עד Z ואחריה אחת או יותר ספרות
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("([A-Z][0-9]+)");
         java.util.regex.Matcher matcher = pattern.matcher(line);
         while (matcher.find()) {
@@ -503,112 +470,118 @@ public class Ex2Sheet implements Sheet {
         return ans;
     }
 
+private Object computeFormP(String form) {
+    // Removing unnecessary spaces
+    form = form.trim();
 
-    private Object computeFormP(String form) {
-
-        // ★ תיקון: הסרת סימן "=" מוביל אם קיים
-        if(form.startsWith("=")) {
-            form = form.substring(1).trim();
-        }
-
-        // שלב 1: בדיקה אם מדובר במספר
-        if (isNumber(form)) {
-            Double num = getDouble(form);
-            return num;
-        }
-
-        // שלב 2: בדיקה אם מדובר במחרוזת מוקפת במרכאות
-        if (form.startsWith("\"") && form.endsWith("\"")) {
-            String text = form.substring(1, form.length() - 1);
-            return text;
-        }
-
-        // שלב 3: טיפול בנוסחאות IF
-        if (form.startsWith("if(") && form.endsWith(")")) {
-            Object result = evaluateIfFunction(form);
-            return result;
-        }
-
-        // שלב 4: טיפול בהפניות לתאים – החלפת כל הפניה (כגון "A1" או "b2") בערכה המחושב (כמספר)
-        java.util.regex.Pattern refPattern = java.util.regex.Pattern.compile("([A-Za-z][0-9]+)");
-        java.util.regex.Matcher matcher = refPattern.matcher(form);
-        while (matcher.find()) {
-            String cellRefOrig = matcher.group(1); // לדוגמה "b1" או "A1"
-            String cellRef = cellRefOrig.toUpperCase();
-            Index2D idx = new CellEntry(cellRef);
-            if (!isIn(idx.getX(), idx.getY())) {
-                return null;
-            }
-            String refVal = this.value(idx.getX(), idx.getY());
-            Double refNum = getDouble(refVal);
-            if (refNum == null) {
-                return null;
-            }
-            // החלפה בלתי תלויה במקרה – משתמשים ב־replaceAll עם (?i)
-            form = form.replaceAll("(?i)" + java.util.regex.Pattern.quote(cellRefOrig), refNum.toString());
-        }
-
-        // ★ בדיקה מחדש: אם לאחר החלפת ההפניות המחרוזת היא מספר
-        if (isNumber(form)) {
-            Double num = getDouble(form);
-            return num;
-        }
-
-        // שלב 5: הסרת סוגריים חיצוניים מיותרים (אם קיימים)
-        while (canRemoveB(form)) {
-            form = removeB(form);
-        }
-
-        // שלב 6: ניתוח ביטוי אריתמטי – חיפוש האופרטור העיקרי
-        int opIndex = findLastOp(form);
-        if (opIndex == -1) {
-            // אם לא נמצא אופרטור ונראה שאין תווי אופרטור, נניח שמדובר בטקסט פשוט
-            boolean hasOperator = false;
-            for (String op : Ex2Utils.M_OPS) {
-                if (form.contains(op)) {
-                    hasOperator = true;
-                    break;
-                }
-            }
-            if (!hasOperator) {
-                return form;  // אין אופרטור → טקסט פשוט
-            }
-            return null;
-        }
-
-        String leftStr = form.substring(0, opIndex);
-        String rightStr = form.substring(opIndex + 1);
-        char operator = form.charAt(opIndex);
-
-        Object leftObj = computeFormP(leftStr);
-        Object rightObj = computeFormP(rightStr);
-        if (!(leftObj instanceof Double) || !(rightObj instanceof Double)) {
-            return null;
-        }
-        double leftVal = (Double) leftObj;
-        double rightVal = (Double) rightObj;
-        Double result = null;
-        switch (operator) {
-            case '+': result = leftVal + rightVal; break;
-            case '-': result = leftVal - rightVal; break;
-            case '*': result = leftVal * rightVal; break;
-            case '/':
-                if (Math.abs(rightVal) < Ex2Utils.EPS) {
-                    return null;
-                }
-                result = leftVal / rightVal;
-                break;
-            default:
-                return null;
-        }
-        return result;
+    // We'll check if the formula starts with one of the functions: min, max, sum, average.
+    // If so, we'll send it to computeFunction which will return the calculated value.
+    Object funcResult = computeFunction(form);
+    if (funcResult != null) {
+        return funcResult;
     }
 
+    // cut the (=)
+    if (form.startsWith("=")) {
+        form = form.substring(1).trim();
+    }
+
+    // check if number
+    if (isNumber(form)) {
+        Double num = getDouble(form);
+        return num;
+    }
+
+    // check if it texts
+    if (form.startsWith("\"") && form.endsWith("\"")) {
+        return form.substring(1, form.length() - 1);
+    }
+
+    // If conditions
+    if (form.startsWith("if(") && form.endsWith(")")) {
+        return evaluateIfFunction(form);
+    }
+
+    // referring to other cells-switch the cell to their numbers value
+    java.util.regex.Pattern refPattern = java.util.regex.Pattern.compile("([A-Za-z][0-9]+)");
+    java.util.regex.Matcher matcher = refPattern.matcher(form);
+    while (matcher.find()) {
+        String cellRefOrig = matcher.group(1);
+        String cellRef = cellRefOrig.toUpperCase();
+        Index2D idx = new CellEntry(cellRef);
+        if (!isIn(idx.getX(), idx.getY())) {
+            return null;
+        }
+        String refVal = this.value(idx.getX(), idx.getY());
+        Double refNum = getDouble(refVal);
+        if (refNum == null) {
+            return null;
+        }
+        form = form.replaceAll("(?i)" + java.util.regex.Pattern.quote(cellRefOrig), refNum.toString());
+    }
+
+    // Recheck: If after swapping references the string is a number, we return the number
+    if (isNumber(form)) {
+        Double num = getDouble(form);
+        return num;
+    }
+
+    // Removing unnecessary outer brackets
+    while (canRemoveB(form)) {
+        form = removeB(form);
+    }
+
+    //Arithmetic expression analysis – Finding a primary operator
+    int opIndex = findLastOp(form);
+    if (opIndex == -1) {
+        // If no operator is found and there appear to be no operator characters, assume it is simple text.
+        boolean hasOperator = false;
+        for (String op : Ex2Utils.M_OPS) {
+            if (form.contains(op)) {
+                hasOperator = true;
+                break;
+            }
+        }
+        if (!hasOperator) {
+            return form;
+        }
+        return null;
+    }
+
+    String leftStr = form.substring(0, opIndex);
+    String rightStr = form.substring(opIndex + 1);
+    char operator = form.charAt(opIndex);
+
+    Object leftObj = computeFormP(leftStr);
+    Object rightObj = computeFormP(rightStr);
+    if (!(leftObj instanceof Double) || !(rightObj instanceof Double)) {
+        return null;
+    }
+    double leftVal = (Double) leftObj;
+    double rightVal = (Double) rightObj;
+    Double result = null;
+    switch (operator) {
+        case '+': result = leftVal + rightVal; break;
+        case '-': result = leftVal - rightVal; break;
+        case '*': result = leftVal * rightVal; break;
+        case '/':
+            if (Math.abs(rightVal) < Ex2Utils.EPS) {
+                return null;
+            }
+            result = leftVal / rightVal;
+            break;
+        default:
+            return null;
+    }
+    return result;
+}
 
 
 
 
-
+/*splitIfArguments: split the arguments of given "if" function to three parts using
+array list and stringBuilder method to make it simple.
+ */
     private String[] splitIfArguments(String s) {
         java.util.ArrayList<String> parts = new java.util.ArrayList<>();
         int bracketCount = 0;
@@ -635,49 +608,58 @@ public class Ex2Sheet implements Sheet {
         parts.add(current.toString().trim());
         return parts.toArray(new String[0]);
     }
-
+/**
+evaluateIfFunction: the first "touch" the if condition. first check if it is
+ a real if and then split it with splitIfArguments.
+ then checks if it's referring to another cell and then other checks.
+*/
     private Object evaluateIfFunction(String form) {
         if (!form.startsWith("if(") || !form.endsWith(")")) {
-            return null;
+            return Ex2Utils.IF_ERR;
         }
         String inner = form.substring(3, form.length()-1).trim();
         String[] parts = splitIfArguments(inner);
         if (parts.length != 3) {
-            return null;
+            return Ex2Utils.IF_ERR;
         }
         String condition = parts[0];
         String ifTrue = parts[1];
         String ifFalse = parts[2];
 
-        // *** בדיקה נוספת ***
-        // אם אחד מהארגומנטים הוא הפניה לתא בצורה גסה (למשל "A1" או "b2"), זה נחשב לבלתי תקין.
+
+        //checks if referring to another cell using regex method
         if (ifTrue.matches("^[A-Za-z]+[0-9]+$") || ifFalse.matches("^[A-Za-z]+[0-9]+$")) {
-            return null;
+            return Ex2Utils.IF_ERR;
         }
 
         Boolean condResult = evaluateCondition(condition);
         if (condResult == null) {
-            return null;
+            return Ex2Utils.IF_ERR;
         }
+        // if condResult is true it means that the condition is true therefore we will call computeFormP(ifTrue)
+        // if it false we will call computeFormP with the "if_false".
         Object chosenResult = condResult ? computeFormP(ifTrue) : computeFormP(ifFalse);
         return chosenResult;
     }
 
 
 
-
+/*
+evaluateCondition: checks the condition itself (a1>a2 for example) by "translate"
+the parts of the condition to numbers.
+ */
     private Boolean evaluateCondition(String condition) {
         String[] ops = {"<=", ">=", "==", "!=", "<", ">"};
         for (String op : ops) {
             if (condition.contains(op)) {
                 String[] parts = condition.split(java.util.regex.Pattern.quote(op));
                 if (parts.length != 2) {
-                    return null; // פורמט שגוי
+                    return null; // wrong format
                 }
                 Object leftObj = computeFormP(parts[0].trim());
                 Object rightObj = computeFormP(parts[1].trim());
                 if (!(leftObj instanceof Double) || !(rightObj instanceof Double)) {
-                    return null;
+                    return null; //also wrong format
                 }
                 Double left = (Double) leftObj;
                 Double right = (Double) rightObj;
@@ -694,12 +676,17 @@ public class Ex2Sheet implements Sheet {
         }
         return null;
     }
-
+/**
+* isValidIf: checks given "if" validation
+Condition: has to contain three arguments and start with "if" and end with ")"
+ * condition should be able to evaluate and iftrue, iffalse should be proper expression
+ and not self-referencing .
+ */
 
     private boolean isValidIf(String form, int cellX, int cellY) {
         form = form.trim();
 
-        // בדיקה בסיסית: הנוסחה חייבת להתחיל ב-"if(" ולהסתיים ב-")"
+        // base check: start with if and end with )
         if (!form.startsWith("if(") || !form.endsWith(")")) {
             return false;
         }
@@ -714,19 +701,19 @@ public class Ex2Sheet implements Sheet {
         String ifTrue = parts[1].trim();
         String ifFalse = parts[2].trim();
 
-        // בדיקת תנאי – נשתמש ב-evaluateCondition
+        // condition check by evaluateCondition()
         Boolean condResult = evaluateCondition(condition);
         if (condResult == null) {
             return false;
         }
 
-        // בדיקת ifTrue ו-ifFalse
+        //  ifTrue, ifFalse arguments checking
         if (!isValidExpressionForArgument(ifTrue) || !isValidExpressionForArgument(ifFalse)) {
             return false;
         }
 
-        // בדיקת הפניה עצמית:
-        String cellRef = Ex2Utils.ABC[cellX].toUpperCase() + cellY;  // לדוגמה "A0" עבור תא A0
+        // self-referencing check
+        String cellRef = Ex2Utils.ABC[cellX].toUpperCase() + cellY;  //For example "A0" for cell A0
         if (condition.toUpperCase().contains(cellRef) ||
                 ifTrue.toUpperCase().contains(cellRef) ||
                 ifFalse.toUpperCase().contains(cellRef)) {
@@ -737,7 +724,9 @@ public class Ex2Sheet implements Sheet {
     }
 
 
-
+/**
+* containsSelfReference: checks if condition contain self reference.
+*/
 
 
     private boolean containsSelfReference(String formula, int x, int y) {
@@ -752,17 +741,21 @@ public class Ex2Sheet implements Sheet {
                 String[] parts = condition.split(op);
                 if (parts.length != 2) return false;
 
-                // בדיקה ששני הצדדים הם ביטויים תקינים
+                //Checking that both sides are valid expressions
                 return isValidExpression(parts[0].trim()) && isValidExpression(parts[1].trim());
             }
         }
         return false;
     }
+    /**
+     * isValidExpression: Checks whether an expression is a formula, a number
+     * , or text enclosed in quotation marks.
+     */
     private boolean isValidExpression(String expr) {
         if (expr.startsWith("=")) {
-            return true; //  אם זה נוסחה זה תקין
+            return true; // it is a formula
         }
-        return isNumber(expr) || expr.startsWith("\"") && expr.endsWith("\""); // ✅ מספר או טקסט
+        return isNumber(expr) || expr.startsWith("\"") && expr.endsWith("\""); // number or text
     }
     private boolean isValidExpressionForArgument(String expr) {
         if (expr.startsWith("=") || expr.startsWith("if("))
@@ -771,10 +764,43 @@ public class Ex2Sheet implements Sheet {
             return true;
         if (expr.startsWith("\"") && expr.endsWith("\""))
             return true;
-        // אם הביטוי תואם בדיוק להפניה לתא – זה לא תקין כארגומנט
+        // check if the argument is a cell
         if (expr.matches("^[A-Za-z]+[0-9]+$"))
             return false;
         return !expr.isEmpty();
+    }
+    private Object computeFunction(String form) {
+        form = form.trim();
+        // cut the (=)
+        if (form.startsWith("=")) {
+            form = form.substring(1).trim();
+        }
+        try {
+            if(form.startsWith("min(") && form.endsWith(")")) {
+                String rangeStr = form.substring(4, form.length()-1).trim();
+                Range2D range = new Range2D(rangeStr);
+                return RangeFunctions.min(this, range);
+            }
+            if(form.startsWith("max(") && form.endsWith(")")) {
+                String rangeStr = form.substring(4, form.length()-1).trim();
+                Range2D range = new Range2D(rangeStr);
+                return RangeFunctions.max(this, range);
+            }
+            if(form.startsWith("sum(") && form.endsWith(")")) {
+                String rangeStr = form.substring(4, form.length()-1).trim();
+                Range2D range = new Range2D(rangeStr);
+                return RangeFunctions.sum(this, range);
+            }
+            if(form.startsWith("average(") && form.endsWith(")")) {
+                String rangeStr = form.substring(8, form.length()-1).trim();
+                Range2D range = new Range2D(rangeStr);
+                return RangeFunctions.average(this, range);
+            }
+        } catch(Exception e) {
+            // in case of invalid input return Func Eror
+            return Ex2Utils.FUNC_EROR;
+        }
+        return null;
     }
 
 

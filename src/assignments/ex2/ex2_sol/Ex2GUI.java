@@ -21,7 +21,7 @@ public class Ex2GUI {
 
 	public Ex2GUI() {
 		;
-	}  // an empty (redundant) constructor.
+	}
 
 	/**
 	 * The main function for running Ex2
@@ -149,10 +149,18 @@ public class Ex2GUI {
 
 				cord = new CellEntry(xx, yy);
 				Cell cc = table.get(xx, yy);
-
-				String c = StdDrawEx2.getCell(cord, cc.getData());
+				// Instead of calling cc.getData(),
+				// we read rawInput from the cell (assuming the object is SCell)
+				String currentInput = "";
+				if (cc instanceof SCell) {
+					currentInput = ((SCell) cc).getRawInput();
+				} else {
+					currentInput = cc.getData();
+				}
+				String c = StdDrawEx2.getCell(cord, currentInput);
 
 				if (c == null) {
+					StdDrawEx2.resetXY();
 					return;
 				}
 

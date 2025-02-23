@@ -5,6 +5,7 @@ package assignments.ex2.ex2_sol;
 public class SCell implements Cell {
     private String _line;
     private int order =0;
+    private String rawInput;
     int type = Ex2Utils.TEXT;
     public SCell() {this("");}
     public SCell(String s) {setData(s);}
@@ -22,12 +23,14 @@ public class SCell implements Cell {
 
     @Override
     public void setData(String s) {
-        if(s!=null) {
+        if (s != null) {
+            // save original input
+            rawInput = s;
             type = Ex2Utils.TEXT;
             if (isNumber(s)) {
                 type = Ex2Utils.NUMBER;
             }
-            if(s.startsWith("=")) {
+            if (s.startsWith("=")) {
                 type = Ex2Utils.FORM;
             }
             _line = s;
@@ -35,16 +38,20 @@ public class SCell implements Cell {
     }
     @Override
     public String getData() {
-        if (type == Ex2Utils.IF_ERR ||
+        if (
                 type == Ex2Utils.ERR_FORM_FORMAT ||
                 type == Ex2Utils.ERR_CYCLE_FORM ||
                 type == Ex2Utils.FUNC_ERR) {
             return Ex2Utils.ERR_FORM;
+        } else if (type == Ex2Utils.IF_ERR) {
+            return Ex2Utils.ERR_If;
         }
         return _line;
     }
 
-
+    public String getRawInput() {
+        return rawInput;
+    }
     @Override
     public int getType() {
         return type;

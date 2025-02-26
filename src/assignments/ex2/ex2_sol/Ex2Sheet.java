@@ -222,6 +222,7 @@ public class Ex2Sheet implements Sheet {
         sp.eval();
         table = sp.table;
         data = sp.data;
+        textValues = sp.textValues;
     }
 
     @Override

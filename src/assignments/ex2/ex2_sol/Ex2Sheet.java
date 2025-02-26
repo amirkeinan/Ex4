@@ -28,13 +28,17 @@ public class Ex2Sheet implements Sheet {
     public Ex2Sheet() {
         this(Ex2Utils.WIDTH, Ex2Utils.HEIGHT);
     }
-
+//value:The value(x,y) method is intended to display the value that appears in the GUI.
+// If the calculated value (e.g., the result of a formula calculation) exists, it is displayed.
+//Otherwise, the raw text is returned.
     @Override
     public String value(int x, int y) {
         Cell c = table[x][y];
         if (c == null) {
             return "";
         }
+        //If there is a calculated value for the cell or text generated from the result of a formula then the function will return it,
+        // otherwise it will return raw cell information.
         if (data != null && data[x][y] != null) {
             return String.valueOf(data[x][y]);
         }
@@ -113,7 +117,7 @@ public class Ex2Sheet implements Sheet {
 
 
     ///////////////////////////////////////////////////////////
-
+    //Run on all cells and call eval(x,y) to work on each of them.
     @Override
     public void eval() {
         int[][] dd = depth();
@@ -128,7 +132,7 @@ public class Ex2Sheet implements Sheet {
                     // If the cell is supposed to contain a number – we will try to convert
                     if (c.getType() == Ex2Utils.NUMBER || c.getType() == Ex2Utils.FORM || c.getType() == Ex2Utils.FUNCTION) {
                         try {
-                            Double d = Double.parseDouble(res);
+                            Double d = getDouble(res);
                             data[x][y] = d;
                         } catch (NumberFormatException e) {
                             c.setType(Ex2Utils.ERR_FORM_FORMAT);

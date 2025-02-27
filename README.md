@@ -190,18 +190,39 @@ Evaluate formulas (arithmetic, IF, and range functions).
 Handle errors gracefully (displaying error messages in the grid while preserving raw input for editing).
 Provide range-based functions via new classes (Range2D and RangeFunctions) for operations like min, max, sum, and average.
 
-Here are some examples of the project's capabilities in the GUI:
+Here are some examples of the project's capabilities in the GUI, and more details on IF and SUM:
 
-Func example:
+IF:
 
-https://github.com/user-attachments/assets/66a6726a-1d92-435f-b548-c758d11ecfb6
+In If function, I defined that ifTrue and ifFalse cannot be a cell (for example A1) without the = sign, and if the user enters it without "=" it will return ERR_IF. This would have made more sense to me because it is more likely that the user wanted to refer to a cell and not add a cell with the text A1, even though implementing this required adding a dedicated test in the evaluateIfFunction.
+In addition, the code knows how to handle nested IF, and formulas (+,*,/) within the condition and the ifTrue/False.
 
 If Example:
 
 https://github.com/user-attachments/assets/6f6360d7-a5ef-405d-9cd1-d0eda8778481
 
+Nested if and load file with it:
+
+https://github.com/user-attachments/assets/48d72e7f-7e50-449c-8340-fe9509c52d11
+
+
+
+Func example:
+
+https://github.com/user-attachments/assets/66a6726a-1d92-435f-b548-c758d11ecfb6
+
+
+
 Editing and update cells:
 
-https://github.com/user-attachments/assets/64ea17ff-fe31-4bd7-9c88-b2ccce984966
+
+https://github.com/user-attachments/assets/46db71e1-836a-485a-9a8d-5fdf741cc9d3
+
+
+
+
+
+
+
 
 

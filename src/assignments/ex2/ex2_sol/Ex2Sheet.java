@@ -7,6 +7,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+/**
+ * Ex2Sheet – Spreadsheet Implementation.
+ *
+ * This class implements a simple spreadsheet. It maintains a 2D array of Cell objects
+ * (using SCell as the concrete implementation) and supports various operations such as:
+ * - Setting and retrieving cell values via set(x, y, s) and get(x, y).
+ * - Evaluating formulas in cells using the eval() and eval(x, y) methods.
+ * - Processing formulas including arithmetic expressions, IF formulas, and function calls.
+ *
+ * The class also manages two auxiliary arrays, 'data' (for numeric computed values)
+ * and 'textValues' (for computed text values), which are used by the value(x, y) method
+ * to determine what to display in the GUI.
+ */
 
 public class Ex2Sheet implements Sheet {
     private Cell[][] table;

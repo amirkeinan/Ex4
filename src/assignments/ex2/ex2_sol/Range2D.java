@@ -1,6 +1,18 @@
 package assignments.ex2.ex2_sol;
 
 import java.util.ArrayList;
+/**
+ * Range2D – Represents a Range of Cells.
+ *
+ * This class encapsulates a two-dimensional range of cells defined by a start and an end
+ * cell (e.g., "A1:C5"). It parses a range string and extracts:
+ * - The starting and ending column indices.
+ * - The starting and ending row indices.
+ *
+ * It provides the method getAllCells() which returns an ArrayList of Index2D objects
+ * representing every cell within the range. This class is used by the range functions
+ * (min, max, sum, average) to process operations over a line/rectangular block of cells.
+ */
 
 public class Range2D {
     private int colStart, colEnd, rowStart, rowEnd;

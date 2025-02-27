@@ -1,7 +1,18 @@
 package assignments.ex2.ex2_sol;
 /**
- * The documentation of this class was removed as of Ex4...
+ * SCell – Cell Implementation.
+ *
+ * This class is a concrete implementation of the Cell interface. Each SCell stores:
+ * - The raw input provided by the user (rawInput), which is preserved for editing.
+ * - The current display value (_line) which may be updated to a computed result or an error message.
+ * - A type field that indicates the cell's content type (e.g., TEXT, NUMBER, FORM, IF, IF_ERR, FUNCTION).
+ *
+ * Key functions include:
+ * - setData(String s): Stores the raw input and determines the cell type.
+ * - getData(): Returns the computed display value (or an error message, if applicable).
+ * - getRawInput(): Returns the original user input (used when editing a cell).
  */
+
 public class SCell implements Cell {
     private String _line;
     private int order =0;

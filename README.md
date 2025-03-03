@@ -190,7 +190,7 @@ Evaluate formulas (arithmetic, IF, and range functions).
 Handle errors gracefully (displaying error messages in the grid while preserving raw input for editing).
 Provide range-based functions via new classes (Range2D and RangeFunctions) for operations like min, max, sum, and average.
 
-Here are some examples of the project's capabilities in the GUI, and more details on IF and SUM:
+Here are some examples of the project's capabilities in the GUI, and more details on IF and Funcs:
 
 IF:
 
